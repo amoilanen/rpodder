@@ -21,49 +21,90 @@ require 'uri'
 require 'rexml/document'
 require 'fileutils'
 
-#TODO:'Quick-and-dirty' implementation just to make the first end-to-end test pass. 
-#Re-factor the code to make it more object oriented and reduce duplication, cover with unit tests
-#A few classes should be extracted, in the resulting code there should not be so many comment as now
+module RPodder
+  
+  class FeedFetcher
+
+    def initialize(podcastURL)
+      @podcastURL = podcastURL
+    end
+    
+    def fetch
+      url = URI.parse(@podcastURL)
+      
+      response = Net::HTTP.start(url.host, url.port) do |http|
+        path = url.path
+        
+        #TODO: Test what if there are several query parameters, one parameter, etc?
+        path = path + "?" + url.query if !url.query.nil?
+        http.get(path)
+      end
+      response.body
+    end
+  end
+  
+  class FeedReader
+    
+    def initialize(feedXML)
+      @feedXML = REXML::Document.new(feedXML)
+    end
+    
+    def episodes
+      episodes = []
+      @feedXML.elements.each("rss/channel/item") do |episode|
+         episodes << episode.elements["enclosure"].attributes["url"]
+      end
+      episodes
+    end
+    
+    def title
+      REXML::XPath.first(@feedXML, "rss/channel/title").text
+    end
+  end
+  
+  class FeedStorage
+    
+    def initialize(workDirectory, feedReader, downloader)
+      @workDirectory = workDirectory
+      @feedReader = feedReader
+      @downloader = downloader
+    end
+    
+    def storeEpisodes
+      folder = feedFolder
+      FileUtils.mkdir_p(folder) if !File.exists?(folder) 
+      
+      @feedReader.episodes.each do |episode|
+        episodeFileFullName = File.join(folder, episodeName(episode))
+        @downloader.download(episode, episodeFileFullName)
+      end
+    end
+    
+    def episodeName(episode)
+      episode[(episode.rindex(/\//) + 1)..-1]
+    end
+    
+    def feedFolder
+      podcastFolderName = @feedReader.title.downcase.gsub(/\s/, "")
+      File.join(@workDirectory, podcastFolderName)
+    end
+  end
+  
+  class FileDownloader    
+    def download(fileURL, fileName)
+      system("wget \"#{fileURL}\" -O #{fileName}")
+    end
+  end
+end
 
 if __FILE__ == $PROGRAM_NAME
 
   #Reading arguments
   podcastURL = ARGV[0]
-  podcastDirectory = ARGV[1]
+  workDirectory = ARGV[1]
   
-  #Creating the podcast directory if it does not exist
-  FileUtils.mkdir_p(podcastDirectory) if !File.exists?(podcastDirectory) 
-  
-  #Reading XML feed
-  url = URI.parse(podcastURL)
-  response = Net::HTTP.start(url.host, url.port) do |http|
-    http.get(url.path)
-  end
-  xmlFeed = response.body
-
-  #Parsing the feed to get the episodes  
-  episodes = Array.new()
-  xmlFeed = REXML::Document.new(xmlFeed)
-
-  xmlFeed.elements.each("rss/channel/item") do |episode|
-     episodes << episode.elements["enclosure"].attributes["url"]
-  end
-  
-  #Getting the title of the podcast and computing the folder to store the episodes in
-  title = REXML::XPath.first(xmlFeed, "rss/channel/title").text
-  podcastFolderName = title.downcase.gsub(/\s/, "")
-  
-  podcastFolderFullName = File.join(podcastDirectory, podcastFolderName)
-
-  #Creating the podcast folder if it does not exist
-  FileUtils.mkdir_p(podcastFolderFullName) if !File.exists?(podcastFolderFullName) 
-  
-  #Downloading the episodes into the folder with 'wget'
-  episodes.each do |episode|
-    
-    #Getting the name of the episode
-    episodeFileName = episode[(episode.rindex(/\//) + 1)..-1]
-    episodeFileFullName = File.join(podcastFolderFullName, episodeFileName)
-    system("wget \"#{episode}\" -O #{episodeFileFullName}")
-  end
+  xmlFeed = RPodder::FeedFetcher.new(podcastURL).fetch  
+  feedReader = RPodder::FeedReader.new(xmlFeed)
+  downloader = RPodder::FileDownloader.new
+  feedStorage = RPodder::FeedStorage.new(workDirectory, feedReader, downloader).storeEpisodes
 end

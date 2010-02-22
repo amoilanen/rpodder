@@ -4,11 +4,19 @@
 - Written the first end-to-end test for downloading all the links from a given podcast URL
 - Written the first ugly end-to-end slice of rpodder, to be re-factored and covered with more low level tests
 
+06/25/2011
+
+- Fixed an issue: the query part of the podcast URL was ignored
+- Re-factored the first end-to-end slice of rpodder
+
 TODO:
 - Add Rake tasks to launch unit/end-to-end/all tests
+- Episodes that were once downloaded are not downloaded again
+- It is possible to save podcast episodes under names that are different from the names of the physical files on
+the server, for example we would like to use the episode's title
+
 - rpodder can be launched from a command line
 - Several podcasts can be downloaded in a sequence
-- Episodes that were once downloaded are not downloaded again
 - It is possible to configure where to store downloaded podcast episodes
   -- Relative directory name can be used for configuration and download
 - There is a possibility to resume download in case it was interrupted
@@ -24,4 +32,5 @@ TODO:
 - Information about only new recently downloaded podcast episodes can be shown
 - Old podcast episodes can be automatically removed
 - Mode of downloading podcasts in a cross-platform manner (not using 'wget', for example)
+- Possible optimization: download episodes in several threads?
 - Make rpodder work on Windows

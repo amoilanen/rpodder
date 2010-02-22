@@ -40,9 +40,12 @@ class RPodderTest < Test::Unit::TestCase
     feedURL = 'http://localhost:4567/rss-feed-episodes/1/5'
     system("ruby #{@rpodder} \"#{feedURL}\" \"#{@workDir}\"")
 
+    assert_equal(5, Dir.glob(@workDir + '/testpodcast/*').size)
     Dir.glob(@workDir + '/testpodcast/*').sort.each do |f| 
       fileName = Pathname.new(f).basename
       assert_equal "Contents of episode with id #{fileName}", File.readlines(f).join
     end
   end
+  
+  #TODO: Make the working directory parameter optional?
 end
