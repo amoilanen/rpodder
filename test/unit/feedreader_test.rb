@@ -47,8 +47,10 @@ feed
     reader = RPodder::FeedReader.new(feed)
     
     assert_equal("Podcast Title", reader.title)
-    assert_equal(["http://example.com/episode1.mp3",
-      "http://example.com/episode2.mp3", "http://example.com/episode3.mp3"], reader.episodes)
+    assert_equal([
+      RPodder::Episode.new("http://example.com/episode1.mp3", "Episode 1"),
+      RPodder::Episode.new("http://example.com/episode2.mp3", "Episode 2"), 
+      RPodder::Episode.new("http://example.com/episode3.mp3", "Episode 3")], reader.episodes)
   end
   
   def test_when_no_episodes_in_feed_then_feed_is_still_read
@@ -89,8 +91,10 @@ feed
     reader = RPodder::FeedReader.new(feed)
     
     assert_nil(reader.title)
-    assert_equal(["http://example.com/episode1.mp3",
-      "http://example.com/episode2.mp3", "http://example.com/episode3.mp3"], reader.episodes)
+    assert_equal([
+      RPodder::Episode.new("http://example.com/episode1.mp3", "Episode 1"),
+      RPodder::Episode.new("http://example.com/episode2.mp3", "Episode 2"), 
+      RPodder::Episode.new("http://example.com/episode3.mp3", "Episode 3")], reader.episodes)
   end
   
   def test_when_feed_is_malformed_then_exception_is_raised

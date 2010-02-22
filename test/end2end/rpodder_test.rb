@@ -38,14 +38,28 @@ class RPodderTest < Test::Unit::TestCase
 
   def test_when_feed_and_storage_folder_are_given_to_rpodder_then_all_episodes_are_downloaded
     feedURL = 'http://localhost:4567/rss-feed-episodes/1/5'
-    system("ruby #{@rpodder} \"#{feedURL}\" \"#{@workDir}\"")
+    system("ruby #{@rpodder} fetch \"#{feedURL}\" \"#{@workDir}\"")
 
-    assert_equal(5, Dir.glob(@workDir + '/testpodcast/*').size)
-    Dir.glob(@workDir + '/testpodcast/*').sort.each do |f| 
-      fileName = Pathname.new(f).basename
-      assert_equal "Contents of episode with id #{fileName}", File.readlines(f).join
+    (1..5).each do |i|
+      assert_file_exists("#{@workDir}/testpodcast/#{i}.mp3", "Contents of episode with id #{i}.mp3")
+    end
+  end
+  
+  def test_when_use_episode_name_option_is_given_then_all_episodes_are_downloaded_to_files_named_accordingly
+    feedURL = 'http://localhost:4567/rss-feed-episodes/1/5'
+    system("ruby #{@rpodder} fetch \"#{feedURL}\" \"#{@workDir}\" -use_episode_names")
+
+    (1..5).each do |i|
+      assert_file_exists("#{@workDir}/testpodcast/Episode #{i}.mp3", "Contents of episode with id #{i}.mp3")
     end
   end
   
   #TODO: Make the working directory parameter optional?
+  
+  private 
+ 
+  def assert_file_exists(path, contents)
+    assert(File.exists?(path))
+    assert_equal(contents, File.readlines(path).join)
+  end
 end

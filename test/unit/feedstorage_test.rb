@@ -31,11 +31,11 @@ class FeedFetcherTest < Test::Unit::TestCase
       true
     end
   end
-  
+
   def test_when_full_URL_is_provided_then_it_is_used_to_fetch_contents    
     @folder = "workfolder"
     @title = "title"
-    @episodes = ["/episode1", "/episode2", "/episode3"]
+    @episodes = [episode("/episode1"), episode("/episode2"), episode("/episode3")]
 
     assert_will_download(["workfolder/title/episode1", "workfolder/title/episode2", "workfolder/title/episode3"])
   end
@@ -51,7 +51,7 @@ class FeedFetcherTest < Test::Unit::TestCase
   def test_when_there_is_no_title_then_episodes_will_be_stored_in_root_of_work_directory
     @folder = "workfolder"
     @title = nil
-    @episodes = ["/episode1", "/episode2", "/episode3"]
+    @episodes = [episode("/episode1"), episode("/episode2"), episode("/episode3")]
 
     assert_will_download(["workfolder/episode1", "workfolder/episode2", "workfolder/episode3"])    
   end
@@ -59,7 +59,7 @@ class FeedFetcherTest < Test::Unit::TestCase
   def test_when_episode_URL_does_not_include_forward_slash_then_file_name_is_same_as_episode_URL
     @folder = "workfolder"
     @title = "title"
-    @episodes = ["episode1", "episode2", "episode3"]
+    @episodes = [episode("episode1"), episode("episode2"), episode("episode3")]
 
     assert_will_download(["workfolder/title/episode1", "workfolder/title/episode2", "workfolder/title/episode3"])
   end
@@ -67,17 +67,39 @@ class FeedFetcherTest < Test::Unit::TestCase
   def test_when_episode_URL_includes_symbols_before_last_forward_slash_then_file_name_does_not_include_these_symbols
     @folder = "workfolder"
     @title = "title"
-    @episodes = ["blah/episode1", "blah/blah/episode2", "blah/blah/blah/episode3"]
+    @episodes = [episode("blah/episode1"), episode("blah/blah/episode2"), episode("blah/blah/blah/episode3")]
 
     assert_will_download(["workfolder/title/episode1", "workfolder/title/episode2", "workfolder/title/episode3"])    
   end
 
+  def test_when_use_episode_names_option_is_provided_then_downloaded_files_have_corresponding_names
+    @folder = "workfolder"
+    @title = "title"
+    @episodes = [episode("/episode1", "name1"), episode("/episode2", "name2"), episode("/episode3", "name3")]
+
+    assert_will_download(["workfolder/title/name1", "workfolder/title/name2", "workfolder/title/name3"],
+      {:useEpisodeNames => true})
+  end
+  
+  def test_when_use_episode_names_option_is_provided_and_server_files_have_extension_then_this_extension_is_preserved
+    @folder = "workfolder"
+    @title = "title"
+    @episodes = [episode("/episode1.mp3", "name1"), episode("/episode2.mp3", "name2"), episode("/episode3.mp3", "name3")]
+
+    assert_will_download(["workfolder/title/name1.mp3", "workfolder/title/name2.mp3", "workfolder/title/name3.mp3"],
+      {:useEpisodeNames => true})
+  end
+
   private 
   
-  def assert_will_download(downloadedFiles)      
+  def episode(url, name = nil)
+    RPodder::Episode.new(url, name)
+  end
+  
+  def assert_will_download(downloadedFiles, opts = {})    
     feedReader = reader(@title, @episodes)
     feedDownloader = downloader(@episodes, downloadedFiles)
-    storage = RPodder::FeedStorage.new(@folder, feedReader, feedDownloader)
+    storage = RPodder::FeedStorage.new(@folder, feedReader, feedDownloader, opts)
     storage.storeEpisodes
   end
   
@@ -90,8 +112,9 @@ class FeedFetcherTest < Test::Unit::TestCase
   
   def downloader(episodes, downloadedFiles)
     downloader = flexmock("downloader")
-    episodes.zip(downloadedFiles).each do |episode, downloadedFile|
-       downloader.should_receive(:download).with(episode, downloadedFile)     
+    episodeURLs = episodes.map {|x| x.url}
+    episodeURLs.zip(downloadedFiles).each do |episodeURL, downloadedFile|
+       downloader.should_receive(:download).with(episodeURL, downloadedFile)     
     end
     downloader
   end

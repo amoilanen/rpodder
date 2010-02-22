@@ -59,7 +59,7 @@ def getRSSFeedItemWithId(id)
   <guid>
   http://localhost:4567/episodes/#{id}
   </guid>
-  <enclosure url="http://localhost:4567/episodes/#{id}" length="unknown" type="audio/mpeg"/>
+  <enclosure url="http://localhost:4567/episodes/#{id}.mp3" length="unknown" type="audio/mpeg"/>
   </item>
 ITEM
 end

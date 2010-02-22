@@ -52,6 +52,26 @@ module RPodder
     end
   end
   
+  #TODO: Too much boiler-plate code in Episode. Can we get rid of it?
+  class Episode
+    
+    include Comparable
+    
+    attr_reader :url, :name 
+    
+    def initialize(url, name)
+      @url, @name = url, name
+    end
+    
+    def comparable_fields
+      [url, name]
+    end
+ 
+    def <=>(other)
+      self.comparable_fields <=> other.comparable_fields
+    end
+  end
+  
   class FeedReader
     
     def initialize(feedXML)
@@ -61,7 +81,9 @@ module RPodder
     def episodes
       episodes = []
       @feedXML.elements.each("rss/channel/item") do |episode|
-         episodes << episode.elements["enclosure"].attributes["url"]
+         url = episode.elements["enclosure"].attributes["url"]
+         name = episode.elements["title"].text
+         episodes << Episode.new(url, name)
       end
       episodes
     end
@@ -74,10 +96,11 @@ module RPodder
   
   class FeedStorage
     
-    def initialize(workDirectory, feedReader, downloader)
+    def initialize(workDirectory, feedReader, downloader, opts = {})
       @workDirectory = workDirectory
       @feedReader = feedReader
       @downloader = downloader
+      @useEpisodeNames = !opts[:useEpisodeNames].nil? && opts[:useEpisodeNames]
     end
     
     def storeEpisodes
@@ -85,15 +108,29 @@ module RPodder
       FileUtils.mkdir_p(folder) if !File.exists?(folder) 
       
       @feedReader.episodes.each do |episode|
-        episodeFileFullName = File.join(folder, episodeName(episode))
-        @downloader.download(episode, episodeFileFullName)
+        downloadedFileFullName = File.join(folder, downloadedFileName(episode))          
+        @downloader.download(episode.url, downloadedFileFullName)
       end
     end
     
-    def episodeName(episode)
-      lastForwardSlashIndex = episode.rindex(/\//)
-      return episode if lastForwardSlashIndex.nil?
-      episode[(lastForwardSlashIndex + 1)..-1]
+    private
+
+    def downloadedFileName(episode)      
+      if @useEpisodeNames
+        episodeNameBasedName(episode)
+      else 
+        URLBasedName(episode)
+      end
+    end
+    
+    def episodeNameBasedName(episode)
+      serverExtension = rightMostPart(episode.url, /\./)        
+      (episode.name + "." + serverExtension if !serverExtension.nil?) || episode.name
+    end
+    
+    def URLBasedName(episode)
+      shortEpisodeURL = rightMostPart(episode.url, /\//)      
+      shortEpisodeURL || episode.url
     end
     
     def feedFolderName
@@ -103,23 +140,38 @@ module RPodder
       podcastFolderName = @feedReader.title.downcase.gsub(/\s/, "")
       File.join(@workDirectory, podcastFolderName)
     end
+    
+    def rightMostPart(str, pattern)
+      rightMostIndex = str.rindex(pattern)
+      str[(rightMostIndex + 1)..-1] if !rightMostIndex.nil?
+    end
   end
   
   class FileDownloader    
     def download(fileURL, fileName)
-      system("wget \"#{fileURL}\" -O #{fileName}")
+      system("wget \"#{fileURL}\" -O \"#{fileName}\"")
     end
   end
 end
 
 if __FILE__ == $PROGRAM_NAME
 
-  #Reading arguments
-  podcastURL = ARGV[0]
-  workDirectory = ARGV[1]
+  #TODO: As more actions are supported in addition to 'fetch', consider extracting a separate class
+  
+  action = ARGV[0]
+  
+  raise "Only 'fetch' is currently supported" if action != "fetch"
+  
+  podcastURL = ARGV[1]
+  workDirectory = ARGV[2]
+  
+  useEpisodeNames = !ARGV[3].nil? && ARGV[3] == "-use_episode_names"
   
   xmlFeed = RPodder::FeedFetcher.new(podcastURL).fetch  
   feedReader = RPodder::FeedReader.new(xmlFeed)
   downloader = RPodder::FileDownloader.new
-  feedStorage = RPodder::FeedStorage.new(workDirectory, feedReader, downloader).storeEpisodes
+  feedStorage = RPodder::FeedStorage.new(workDirectory, feedReader, downloader,
+    {:useEpisodeNames => useEpisodeNames})
+
+  feedStorage.storeEpisodes
 end
