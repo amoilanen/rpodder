@@ -30,13 +30,22 @@ module RPodder
     end
     
     def fetch
-      url = URI.parse(@podcastURL)
+      url = URI.parse(@podcastURL)      
+      raise "Cannot fetch feed. Wrong URL format?" if url.scheme != "http" || url.host.nil? || url.port.nil?
       
-      response = Net::HTTP.start(url.host, url.port) do |http|
-        path = url.path
-        
-        #TODO: Test what if there are several query parameters, one parameter, etc?
-        path = path + "?" + url.query if !url.query.nil?
+      getBody(url.host, url.port, getPath(url))
+    end
+    
+    private
+    
+    def getPath(url)
+      path = url.path
+      path = path + "?" + url.query if !url.query.nil?
+      path
+    end
+    
+    def getBody(host, port, path)
+      response = Net::HTTP.start(host, port) do |http|
         http.get(path)
       end
       response.body
@@ -58,7 +67,8 @@ module RPodder
     end
     
     def title
-      REXML::XPath.first(@feedXML, "rss/channel/title").text
+      title = REXML::XPath.first(@feedXML, "rss/channel/title")
+      title.text if !title.nil?
     end
   end
   
@@ -71,7 +81,7 @@ module RPodder
     end
     
     def storeEpisodes
-      folder = feedFolder
+      folder = feedFolderName
       FileUtils.mkdir_p(folder) if !File.exists?(folder) 
       
       @feedReader.episodes.each do |episode|
@@ -81,10 +91,15 @@ module RPodder
     end
     
     def episodeName(episode)
-      episode[(episode.rindex(/\//) + 1)..-1]
+      lastForwardSlashIndex = episode.rindex(/\//)
+      return episode if lastForwardSlashIndex.nil?
+      episode[(lastForwardSlashIndex + 1)..-1]
     end
     
-    def feedFolder
+    def feedFolderName
+      title = @feedReader.title
+      return @workDirectory if title.nil?
+      
       podcastFolderName = @feedReader.title.downcase.gsub(/\s/, "")
       File.join(@workDirectory, podcastFolderName)
     end

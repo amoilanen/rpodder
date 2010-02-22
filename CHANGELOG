@@ -8,13 +8,13 @@
 
 - Fixed an issue: the query part of the podcast URL was ignored
 - Re-factored the first end-to-end slice of rpodder
+- Wrote unit tests for parts of rpodder and added Rake tasks to launch unit/end-to-end/all tests
 
 TODO:
-- Add Rake tasks to launch unit/end-to-end/all tests
-- Episodes that were once downloaded are not downloaded again
 - It is possible to save podcast episodes under names that are different from the names of the physical files on
 the server, for example we would like to use the episode's title
 
+- Episodes that were once downloaded are not downloaded again
 - rpodder can be launched from a command line
 - Several podcasts can be downloaded in a sequence
 - It is possible to configure where to store downloaded podcast episodes
