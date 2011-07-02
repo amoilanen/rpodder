@@ -17,13 +17,11 @@ the server, for example we would like to use the episode's title. This is very u
 - Episodes that were once downloaded are not downloaded again: the standard switch of wget "-c" is used
 - There is a possibility to resume download in case it was interrupted: the standard switch of wget "-c" is used
 - Several podcasts can be downloaded in a sequence
+- Made the directory parameter optional: podcasts are stored in the home directory in the directory "rpodder_podcasts"
+- Extracted command line interface functionality into a separate class and written first tests for it
+- Added usage documentation in README
 
 TODO:
-
-- Make the directory parameter optional: podcasts should be stored in some predefined directory in the home directory
-by default
-- When storing a podcast replace special symbols: ',', '|' with underscores
-- Add usage documentation in README
 
 - Podcast URL can be tracked for fetching updates in the future
 - It is possible to fetch updates for all the tracked URLs
@@ -51,3 +49,7 @@ by default
 
 - Mode of downloading podcasts in a cross-platform manner (not using 'wget', for example)
 - Make rpodder work on Windows
+
+ISSUES:
+
+- When storing a podcast replace special symbols: ',', '|' with underscores

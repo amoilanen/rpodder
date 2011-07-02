@@ -1,15 +1,17 @@
-rpodder, podcast catching client written in Ruby, version 0.2
+rpodder, version 0.2
+
+Podcast catching client written in Ruby.
 
 Features:
 
-1. Fetching podcast episodes
+1. Fetching podcast episodes, the episodes will be stored in the directory "rpodder_podcasts" in the home directory
 
-TODO: Description
+ruby lib/rpodder/rpodder.rb fetch http://rss.cnn.com/services/podcasting/newscast/rss.xml
 
-2. Fetching podcast episodes and storing them in a specified location 
+2. Fetching podcast episodes and storing them in a specified location, the episodes will be stored in the directory "/home/anton/news"
 
-TODO: Description
+ruby lib/rpodder/rpodder.rb fetch http://rss.cnn.com/services/podcasting/newscast/rss.xml -workdir /home/anton/news
 
-3. Fetching podcast episodes and saving them under their titles
+3. Fetching podcast episodes and saving them under their titles, the episodes will be stored in the directory "rpodder_podcasts" in the home directory
  
-TODO: Description
+ruby lib/rpodder/rpodder.rb fetch http://rss.cnn.com/services/podcasting/newscast/rss.xml -use_episode_names

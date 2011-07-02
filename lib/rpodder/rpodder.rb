@@ -152,26 +152,70 @@ module RPodder
       system("wget -c \"#{fileURL}\" -O \"#{fileName}\"")
     end
   end
+  
+  class CommandLine
+
+    def parse(args)
+      workDirectory = consumeValueOption(args, "-workdir", "#{ENV['HOME']}/rpodder_podcasts")
+      useEpisodeNames = consumeBooleanOption(args, "-use_episode_names")  
+      
+      action = args[0]
+      podcastURL = args[1]
+      
+      raise if action != "fetch"
+      raise if podcastURL.nil?
+      
+      Args.new({:action => action, :podcastURL => podcastURL, :workDirectory => workDirectory,
+        :useEpisodeNames => useEpisodeNames})
+    end
+    
+    private
+    
+    def consumeValueOption(args, optionName, defaultValue)      
+      consumeOption(args, optionName, defaultValue) do |args, optionIndex|
+        optionValue = args[optionIndex + 1]
+        2.times { args.delete_at(optionIndex)}
+        optionValue
+      end
+    end
+    
+    def consumeBooleanOption(args, optionName)
+      consumeOption(args, optionName, false) do |args, optionIndex|
+        args.delete_at(optionIndex)
+        true
+      end
+    end
+    
+    def consumeOption(args, optionName, defaultValue, &block)
+      optionIndex = args.index(optionName)
+      optionValue = nil
+      if !optionIndex.nil?
+        optionValue = block.call(args, optionIndex)
+      end
+      optionValue.nil? ? defaultValue : optionValue 
+    end
+  end
+  
+  class Args
+    attr_reader :action, :podcastURL, :workDirectory, :useEpisodeNames
+    
+    def initialize(opts)
+      @action = opts[:action]
+      @podcastURL = opts[:podcastURL]
+      @workDirectory = opts[:workDirectory]
+      @useEpisodeNames = opts[:useEpisodeNames]
+    end
+  end
 end
 
-if __FILE__ == $PROGRAM_NAME
-
-  #TODO: As more actions are supported in addition to 'fetch', consider extracting a separate class
-  
-  action = ARGV[0]
-  
-  raise "Only 'fetch' is currently supported" if action != "fetch"
-  
-  podcastURL = ARGV[1]
-  workDirectory = ARGV[2]
-  
-  useEpisodeNames = !ARGV[3].nil? && ARGV[3] == "-use_episode_names"
-  
-  xmlFeed = RPodder::FeedFetcher.new(podcastURL).fetch  
+if __FILE__ == $PROGRAM_NAME  
+  commandLine = RPodder::CommandLine.new()
+  args = commandLine.parse(ARGV)
+  xmlFeed = RPodder::FeedFetcher.new(args.podcastURL).fetch  
   feedReader = RPodder::FeedReader.new(xmlFeed)
   downloader = RPodder::FileDownloader.new
-  feedStorage = RPodder::FeedStorage.new(workDirectory, feedReader, downloader,
-    {:useEpisodeNames => useEpisodeNames})
+  feedStorage = RPodder::FeedStorage.new(args.workDirectory, feedReader, downloader,
+    {:useEpisodeNames => args.useEpisodeNames})
 
   feedStorage.storeEpisodes
 end

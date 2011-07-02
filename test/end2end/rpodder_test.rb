@@ -104,12 +104,23 @@ class RPodderTest < Test::Unit::TestCase
     end    
   end
     
+  def test_when_work_directory_is_not_specified_then_episodes_are_downloaded_to_home_folder
+    feed({:title => @podcastTitle, :episodesNumber => @episodesNumber})
+    
+    system("ruby #{@rpodder} fetch \"#{@feedURL}\"")
+
+    @workDir = "#{ENV['HOME']}/rpodder_podcasts"
+    (1..@episodesNumber).each do |i|
+      assert_file_contents("#{@workDir}/#{@podcastTitle}/#{i}.mp3", "Contents of episode with id #{i}.mp3")
+    end
+  end
+
   #TODO: Make the working directory parameter optional?
   
   private
 
   def download_feed(options = "")
-    system("ruby #{@rpodder} fetch \"#{@feedURL}\" \"#{@workDir}\" #{options}")
+    system("ruby #{@rpodder} fetch \"#{@feedURL}\" -workdir \"#{@workDir}\" #{options}")
   end
 
   def feed(opts)
