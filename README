@@ -1,1 +1,15 @@
-rpodder, podcast catching client written in Ruby, version 0.0.1
+rpodder, podcast catching client written in Ruby, version 0.2
+
+Features:
+
+1. Fetching podcast episodes
+
+TODO: Description
+
+2. Fetching podcast episodes and storing them in a specified location 
+
+TODO: Description
+
+3. Fetching podcast episodes and saving them under their titles
+ 
+TODO: Description

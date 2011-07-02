@@ -12,24 +12,42 @@
 - It is now possible to save podcast episodes under names that are different from the names of the physical files on
 the server, for example we would like to use the episode's title. This is very useful for some podcasts.
 
-TODO:
-- Episodes that were once downloaded are not downloaded again
-- rpodder can be launched from a command line
+07/02/2011
+
+- Episodes that were once downloaded are not downloaded again: the standard switch of wget "-c" is used
+- There is a possibility to resume download in case it was interrupted: the standard switch of wget "-c" is used
 - Several podcasts can be downloaded in a sequence
-- It is possible to configure where to store downloaded podcast episodes
-  -- Relative directory name can be used for configuration and download
-- There is a possibility to resume download in case it was interrupted
-- Podcast URL can be tracked for featching updates in the future
+
+TODO:
+
+- Make the directory parameter optional: podcasts should be stored in some predefined directory in the home directory
+by default
+- When storing a podcast replace special symbols: ',', '|' with underscores
+- Add usage documentation in README
+
+- Podcast URL can be tracked for fetching updates in the future
 - It is possible to fetch updates for all the tracked URLs
 - List of podcast URLs being currently tracked can be viewed
 - We can stop tracking a podcast URL and updates will not be automatically fetched in the future
+
+- It is possible to download just last n episodes from a podcast (useful in case there are hundreds of episodes)
+
+- rpodder can be launched from a command line (help, usual conventions, etc.)
+
+- It is possible to configure where to store downloaded podcast episodes
+  -- Relative directory name can be used for configuration and download
+
+- Make installation script for rpodder on Linux
+
 - Generic information about podcast URLS can be shown before actually downloading them 
 (such as the number of episodes, title, last update, etc.)
-- It is possible to download just last n episodes from a podcast (useful in case there are hundreds of episodes)
 - Viewing information about how many episodes to download there are and how the download is progressing
 - Information about all downloaded episodes can be shown
 - Information about only new recently downloaded podcast episodes can be shown
+
 - Old podcast episodes can be automatically removed
-- Mode of downloading podcasts in a cross-platform manner (not using 'wget', for example)
+
 - Possible optimization: download episodes in several threads?
+
+- Mode of downloading podcasts in a cross-platform manner (not using 'wget', for example)
 - Make rpodder work on Windows

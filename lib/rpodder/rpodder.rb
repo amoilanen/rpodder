@@ -149,7 +149,7 @@ module RPodder
   
   class FileDownloader    
     def download(fileURL, fileName)
-      system("wget \"#{fileURL}\" -O \"#{fileName}\"")
+      system("wget -c \"#{fileURL}\" -O \"#{fileName}\"")
     end
   end
 end

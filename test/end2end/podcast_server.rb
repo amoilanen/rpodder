@@ -19,10 +19,11 @@
 require 'rubygems'
 require 'sinatra'
 
-@@xmlHeader = <<HEADER
+def xmlHeader(podcastTitle)
+<<HEADER
 <rss xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
 <channel>
-<title>Test Podcast</title>
+<title>#{podcastTitle}</title>
 <link>http://localhost:4567</link>
 <description>Description</description>
 <copyright>Copyright</copyright>
@@ -35,16 +36,19 @@ require 'sinatra'
 </image>
 <lastBuildDate>#{Time.now}</lastBuildDate>
 HEADER
+end
 
-@@xmlFooter=<<FOOTER
+def xmlFooter
+<<FOOTER
 </channel>
 </rss>
 FOOTER
+end
 
-def getRSSFeedForItems(from, to)
-  result = @@xmlHeader
+def getRSSFeedForItems(from, to, title)
+  result = xmlHeader(title)
   (from..to).each {|id| result += getRSSFeedItemWithId(id)}
-  result += @@xmlFooter
+  result += xmlFooter
 end
 
 def getRSSFeedItemWithId(id)
@@ -64,10 +68,11 @@ def getRSSFeedItemWithId(id)
 ITEM
 end
 
-get '/rss-feed-episodes/:from/:to' do
+get '/rss-feed-episodes-with-title/:title/:from/:to' do
+   title = params[:title]
    from = params[:from].to_i
    to = params[:to].to_i
-   getRSSFeedForItems(from, to)
+   getRSSFeedForItems(from, to, title)
 end
 
 get '/episodes/:id' do
